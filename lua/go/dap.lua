@@ -479,11 +479,11 @@ M.run = function(...)
   testfunc = require('go.gotest').get_test_func_name()
   log(testfunc)
 
-  if testfunc then
-    if testfunc.name ~= 'main' then
-      optarg['t'] = true
-    end
-  end
+  -- if testfunc then
+  --   if testfunc.name ~= 'main' then
+  --     optarg['t'] = true
+  --   end
+  -- end
   if optarg['t'] then
     local tblcase_ns = require('go.gotest').get_testcase_name()
 
@@ -629,12 +629,7 @@ local unmap = function()
         end
 
         log(v)
-        vim.keymap.set(
-          mode,
-          v.lhs,
-          v.rhs or v.callback,
-          { noremap = nr, silent = sl, expr = exp, desc = desc }
-        )
+        vim.keymap.set(mode, v.lhs, v.rhs or v.callback, { noremap = nr, silent = sl, expr = exp, desc = desc })
         -- vim.api.nvim_set_keymap('n', v.lhs, v.rhs, {noremap=nr, silent=sl, expr=exp})
       end
     end

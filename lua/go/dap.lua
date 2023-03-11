@@ -419,34 +419,38 @@ M.run = function(...)
       end)
     end
 
-    handle, pid_or_err = vim.loop.spawn('dlv', {
-      stdio = { nil, stdout, stderr },
-      args = { 'dap', '-l', addr },
-      initialize_timeout_sec = con_options.initialize_timeout_sec,
-      detached = true,
-    }, function(code)
-      if code ~= 0 then
-        vim.schedule(function()
-          log('Dlv exited', code)
-          vim.notify(string.format('Delve exited with exit code: %d', code), vim.log.levels.WARN)
-          _GO_NVIM_CFG.dap_port = _GO_NVIM_CFG.dap_port + 1
-        end)
-      end
-
-      _ = stdout and stdout:close()
-      _ = stderr and stderr:close()
-      _ = handle and handle:close()
-      stdout = nil
-      stderr = nil
-      handle = nil
-    end)
-    assert(handle, 'Error running dlv: ' .. tostring(pid_or_err))
-    stdout:read_start(onread)
-    stderr:read_start(onread)
-
-    vim.defer_fn(function()
+    if config.mode == 'remote' then
       callback({ type = 'server', host = host, port = port, options = con_options })
-    end, 1000)
+    else
+      handle, pid_or_err = vim.loop.spawn('dlv', {
+        stdio = { nil, stdout, stderr },
+        args = { 'dap', '-l', addr },
+        initialize_timeout_sec = con_options.initialize_timeout_sec,
+        detached = true,
+      }, function(code)
+        if code ~= 0 then
+          vim.schedule(function()
+            log('Dlv exited', code)
+            vim.notify(string.format('Delve exited with exit code: %d', code), vim.log.levels.WARN)
+            _GO_NVIM_CFG.dap_port = _GO_NVIM_CFG.dap_port + 1
+          end)
+        end
+
+        _ = stdout and stdout:close()
+        _ = stderr and stderr:close()
+        _ = handle and handle:close()
+        stdout = nil
+        stderr = nil
+        handle = nil
+      end)
+      assert(handle, 'Error running dlv: ' .. tostring(pid_or_err))
+      stdout:read_start(onread)
+      stderr:read_start(onread)
+
+      vim.defer_fn(function()
+        callback({ type = 'server', host = host, port = port, options = con_options })
+      end, 1000)
+    end
   end
 
   log(get_test_build_tags())
